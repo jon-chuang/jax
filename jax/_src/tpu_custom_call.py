@@ -17,6 +17,7 @@
 # mypy: ignore-errors
 from __future__ import annotations
 
+from absl import flags
 import base64
 import collections.abc
 from collections.abc import Sequence
@@ -37,6 +38,12 @@ from jaxlib.mlir.dialects import mhlo
 from jaxlib.mlir.dialects import stablehlo
 from jaxlib.mlir.passmanager import PassManager
 import numpy as np
+
+_USE_CPP_APPLY_VECTOR_LAYOUT = flags.DEFINE_bool(
+    "use_cpp_apply_vector_layout",
+    False,
+    "Use C++ implementation of apply vector layout pass (still a WIP)",
+)
 
 # TODO(sharadmv): remove when minimum jaxlib version is bumped to >= 0.4.14.
 if tpu_mosaic is None:
@@ -229,8 +236,14 @@ def _lower_tpu_kernel(
       pipeline = PassManager.parse(f"builtin.module({','.join(pipeline)})")
       pipeline.run(module.operation)
       module.operation.verify()
-
-      apply_vector_layout.apply(module, hardware_generation)
+      if _USE_CPP_APPLY_VECTOR_LAYOUT.value:
+        pipeline = [
+            "func.func(tpu-apply-vector-layout)",
+        ]
+        pipeline = PassManager.parse(f"builtin.module({','.join(pipeline)})")
+        pipeline.run(module.operation)
+      else:
+        apply_vector_layout.apply(module, hardware_generation)
       module.operation.verify()
 
       PassManager.parse("builtin.module(canonicalize)").run(module.operation)
