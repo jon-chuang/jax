@@ -49,6 +49,11 @@ std::pair<bool, bool> mightCommunicateBetweenChips(Operation* op);
 std::unique_ptr<OperationPass<func::FuncOp>> createInferVectorLayoutPass(
     int lane_count = 128, int sublane_count = 8);
 
+std::unique_ptr<OperationPass<func::FuncOp>> createApplyVectorLayoutPass(
+    // TODO(tlongeri): proper default value for hardware_generation, if any
+    // (also update in tpu.td)
+    int hardware_generation = 4, int lane_count = 128, int sublane_count = 8);
+
 std::unique_ptr<OperationPass<func::FuncOp>>
 createLogicalToPhysicalDeviceIdPass(int64_t total_devices);
 
