@@ -53,15 +53,19 @@ def required_devices(num_devices_required):
   return helper1
 
 
+@functools.lru_cache(maxsize=1024)
+def _get_mesh(shape, size, axis_names):
+  devices = sorted(jax.devices(), key=lambda d: d.id)
+  mesh_devices = np.array(devices[:size]).reshape(shape)
+  return jax.sharding.Mesh(mesh_devices, axis_names)
+
+
 def create_mesh(shape, axis_names, state):
   size = math.prod(shape)
   if len(jax.devices()) < size:
     state.skip_with_error(f"Requires {size} devices")
     return None
-  devices = sorted(jax.devices(), key=lambda d: d.id)
-  mesh_devices = np.array(devices[:size]).reshape(shape)
-  global_mesh = jax.sharding.Mesh(mesh_devices, axis_names)
-  return global_mesh
+  return _get_mesh(shape, size, axis_names)
 
 
 def swap(a, b):
