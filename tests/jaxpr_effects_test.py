@@ -391,7 +391,7 @@ class EffectfulJaxprLoweringTest(jtu.JaxTestCase):
       return x + 1.
     module = f.lower(2.).compiler_ir()
     main = module.body.operations[0]
-    first_op = main.body.blocks[0].operations[0]
+    first_op = main.body.blocks[0].operations[1]
     self.assertIn('hlo.create_token', first_op.operation.name)
 
     @jax.jit
@@ -401,9 +401,9 @@ class EffectfulJaxprLoweringTest(jtu.JaxTestCase):
       return x + 1.
     module = f.lower(2.).compiler_ir()
     main = module.body.operations[0]
-    first_op = main.body.blocks[0].operations[0]
+    first_op = main.body.blocks[0].operations[1]
     self.assertIn('hlo.create_token', first_op.operation.name)
-    second_op = main.body.blocks[0].operations[1]
+    second_op = main.body.blocks[0].operations[2]
     self.assertIn('hlo.create_token', second_op.operation.name)
 
     @jax.jit
@@ -412,7 +412,7 @@ class EffectfulJaxprLoweringTest(jtu.JaxTestCase):
       return x + 1.
     module = f.lower(2.).compiler_ir()
     main = module.body.operations[0]
-    first_op = main.body.blocks[0].operations[0]
+    first_op = main.body.blocks[0].operations[1]
     self.assertIn('hlo.create_token', first_op.operation.name)
 
     @jax.jit
@@ -422,9 +422,9 @@ class EffectfulJaxprLoweringTest(jtu.JaxTestCase):
       return x + 1.
     module = f.lower(2.).compiler_ir()
     main = module.body.operations[0]
-    first_op = main.body.blocks[0].operations[0]
+    first_op = main.body.blocks[0].operations[1]
     self.assertIn('hlo.create_token', first_op.operation.name)
-    second_op = main.body.blocks[0].operations[1]
+    second_op = main.body.blocks[0].operations[2]
     self.assertIn('hlo.create_token', second_op.operation.name)
 
   def test_nontrivial_lowering_with_ordered_effect_should_consume_token(self):
@@ -437,9 +437,9 @@ class EffectfulJaxprLoweringTest(jtu.JaxTestCase):
       return x + 1.
     module = f.lower(2.).compiler_ir()
     main = module.body.operations[0]
-    first_op = main.body.blocks[0].operations[0]
+    first_op = main.body.blocks[0].operations[1]
     self.assertIn('hlo.create_token', first_op.operation.name)
-    second_op = main.body.blocks[0].operations[1]
+    second_op = main.body.blocks[0].operations[2]
     self.assertEqual(second_op.operation.name, "func.call")
     self.assertEqual(str(second_op.attributes["callee"]), "@effect")
     self.assertEqual(second_op.operands[0].owner, first_op)
@@ -458,7 +458,7 @@ class EffectfulJaxprLoweringTest(jtu.JaxTestCase):
       return x + 1.
     module = f.lower(2.).compiler_ir()
     main = module.body.operations[0]
-    first_op = main.body.blocks[0].operations[0]
+    first_op = main.body.blocks[0].operations[1]
     self.assertEqual(first_op.operation.name, "func.call")
     self.assertEqual(str(first_op.attributes["callee"]), "@effect")
     self.assertLen(list(first_op.operands), 0)

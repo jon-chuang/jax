@@ -2326,18 +2326,21 @@ def _get_input_indices(
 
 
 def get_gspmd_shardings_from_executable(
-    xla_executable, device_assignment: Sequence[xc.Device],
-    num_out_avals: int
+    xla_executable,
+    device_assignment: Sequence[xc.Device],
+    num_out_avals: int,
+    num_ordered_effects: int,
 ) -> Sequence[sharding_impls.XLACompatibleSharding]:
   from jax._src import pjit
 
-  if sharding_impls._ENABLE_MEMORY_KIND.value:
-    try:
-      omk = xla_executable.get_output_memory_kinds()[0]
-    except:
-      omk = [None] * num_out_avals
-  else:
+  try:
+    omk = xla_executable.get_output_memory_kinds()[0]
+    if num_ordered_effects > 0:
+      omk = omk[num_ordered_effects:]
+  except:
     omk = [None] * num_out_avals
+
+  assert len(omk) == num_out_avals, (len(omk), num_out_avals)
 
   # When the device assignment only has 1 device, SPMD partitioner will not run.
   # Hence the op shardings will not be set on the `hlo_module`. In that case,
@@ -2647,7 +2650,8 @@ class UnloadedMeshExecutable:
       # without tuple conversion.
       device_assignment = tuple(da)
       out_shardings_xla = get_gspmd_shardings_from_executable(  # type: ignore
-          xla_executable, device_assignment, len(global_out_avals))  # type: ignore
+          xla_executable, device_assignment, len(global_out_avals),
+          len(ordered_effects))  # type: ignore
       orig_out_shardings = out_shardings
       out_shardings, are_out_shardings_from_xla = [], []  # type: ignore
       for xla_s, orig, aval in safe_zip(out_shardings_xla, orig_out_shardings,
