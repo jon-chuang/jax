@@ -16,9 +16,16 @@ limitations under the License.
 #include <memory>
 #include <utility>
 
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
 #include "mlir/include/mlir/Dialect/Linalg/Transforms/Hoisting.h"
 #include "mlir/include/mlir/Dialect/Linalg/Transforms/Transforms.h"
+#include "mlir/include/mlir/Dialect/Vector/IR/VectorOps.h"
 #include "mlir/include/mlir/Dialect/Vector/Transforms/LoweringPatterns.h"
+#include "mlir/include/mlir/Dialect/Vector/Transforms/VectorRewritePatterns.h"
+#include "mlir/include/mlir/IR/DialectRegistry.h"
+#include "mlir/include/mlir/IR/Operation.h"
+#include "mlir/include/mlir/IR/PatternMatch.h"
+#include "mlir/include/mlir/Pass/Pass.h"
 #include "mlir/include/mlir/Support/LogicalResult.h"
 #include "mlir/include/mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "jaxlib/mosaic/dialect/tpu/tpu_dialect.h"
@@ -66,7 +73,7 @@ struct LinalgVectorizationPass
 
     // We do not want to apply the vector patterns above to the ops that are
     // unrelated to the original linalg op.
-    SmallVector<Operation *> linalgOps;
+    llvm::SmallVector<Operation *> linalgOps;
     func.walk([&](linalg::LinalgOp op) { linalgOps.push_back(op); });
     if (failed(applyOpPatternsAndFold(linalgOps, std::move(patterns)))) {
       return signalPassFailure();
